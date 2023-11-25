@@ -106,7 +106,7 @@ async def create_thread_endpoint():
     return {"thread_id": thread_id}
 
 @app.post("/chat")
-async def chat(request: ChatMessage):
+async def chat_endpoint(request: ChatMessage):
     # 处理请求，返回响应
     message = main(request.message, request.thread_id, debug=DEBUG)
     if isinstance(message, dict) and "image" in message.keys():
