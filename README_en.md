@@ -10,6 +10,9 @@
 _Read this in [Chinese](README.md)._
 
 ## Introduction
+This is a demonstration of using the OpenAI Assistant API, including complete front-end and back-end code.
+
+## Background
 In my childhood, a black cat brought me a lot of joy.
 
 His eyes were like an entire universe, and his black fur would shimmer with a purplish-gold hue under the sunlight, looking particularly beautiful.
