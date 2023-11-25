@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import time
 from openai import OpenAI
@@ -15,7 +16,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=OPENAI_API_KEY, timeout=600)
 
 # 创建或加载 Assistant
-def create_assistant(name="Assistant", instructions="You are a helpful assistant.", model="gpt-4-1106-preview", tools=None, files=None):
+def create_assistant(name="Assistant", instructions="You are a helpful assistant.", model="gpt-4-1106-preview", tools=None, files=None, debug=False):
     """
     Creates an assistant with the given name, instructions, model, tools, and files.
 
@@ -40,6 +41,8 @@ def create_assistant(name="Assistant", instructions="You are a helpful assistant
                 if assistant_name == name:
                     assistant_id = assistant_data["assistant_id"]
                     print("加载已经存在的 Assistant ID")
+                    if debug:
+                        print("Assistant ID: ", assistant_id)
                     return assistant_id
 
     # 上传文件并获取 file_ids
@@ -85,7 +88,7 @@ def create_assistant(name="Assistant", instructions="You are a helpful assistant
     return assistant_id
 
 # 创建 Thread
-def create_thread():
+def create_thread(debug=False):
     """
     Creates a new thread.
 
@@ -93,6 +96,8 @@ def create_thread():
         str: The ID of the newly created thread.
     """
     thread = client.beta.threads.create()
+    if debug:
+        print("Thread ID: ", thread.id)
     return thread.id
 
 
@@ -111,6 +116,9 @@ def get_completion(assistant_id, thread_id, user_input, funcs, debug=False):
     Returns:
         str: The message as a response to the completion request.
     """
+    if debug:
+        print("获取回答...")
+        
     # 创建 Message
     message = client.beta.threads.messages.create(
         thread_id=thread_id,
@@ -148,6 +156,7 @@ def get_completion(assistant_id, thread_id, user_input, funcs, debug=False):
 
                 if debug:
                     print(f"{tool_call.function.name}: ", output)
+                
                 tool_outputs.append(
                     {
                         "tool_call_id": tool_call.id, 
@@ -167,4 +176,10 @@ def get_completion(assistant_id, thread_id, user_input, funcs, debug=False):
                 thread_id=thread_id
             )
             message = messages.data[0].content[0].text.value
+            pattern = r"/imgs/\d{10}\.png"
+            match = re.search(pattern, message)
+            if match:
+                message = {"image": match.group()}
+            if debug:
+                print(message)
             return message

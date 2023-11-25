@@ -54,16 +54,17 @@ def get_dalle_image(prompt):
         response_format='b64_json',
     )
     img_b64 = response.data[0].b64_json
-    img_file_path = f"../imgs/{timestamp}.png"
     # 保存图片
+    img_name = f"{timestamp}.png"
+    img_file_path = f"../web/public/imgs/{img_name}"
     with open(img_file_path, "wb") as f:
         f.write(base64.b64decode(img_b64))
     # 绘制图片
-    imgs = base64_to_img(img_b64)
-    plt.imshow(imgs)
-    plt.axis('off')
-    plt.show()
-    return img_file_path
+    # imgs = base64_to_img(img_b64)
+    # plt.imshow(imgs)
+    # plt.axis('off')
+    # plt.show()
+    return {"image": "/imgs/" + img_name}
     
 
 if __name__ == "__main__":

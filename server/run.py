@@ -21,98 +21,109 @@ app.add_middleware(
 )
 
 # 定义数据模型
-class ChatQuery(BaseModel):
-    query: str
+class ChatMessage(BaseModel):
+    message: str
+    thread_id: str
     
 DEBUG = True
 
-@app.post("/chat")
-async def chat(request: ChatQuery):
-    # 处理 query，返回响应
-    message = main(request.query, debug=DEBUG)
-    return {"message": message}
-
-def main(query, debug=False):
-    # 创建 Assistant
-    assistant_id = create_assistant(
-        name="好奇的黑猫",
-        instructions=black_cat_instructions,
-        model="gpt-4-1106-preview",
-        tools=[
-            {
-                "type": "retrieval"  # 知识检索
-            },
-            {
-                "type": "code_interpreter"  # 代码解释器
-            },
-            {
-                "type": "function",  # 用于获取当前日期所在城市的函数
-                "function": {
-                    "name": "get_city_for_date",
-                    "description": "根据传入的日期获取对应的城市.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "date_str": {
-                                "type": "string",
-                                "description": "用于获取对应城市的日期，格式为YYYY-MM-DD."
-                            },
+# 创建 Assistant
+assistant_id = create_assistant(
+    name="好奇的黑猫",
+    instructions=black_cat_instructions,
+    model="gpt-4-1106-preview",
+    tools=[
+        {
+            "type": "retrieval"  # 知识检索
+        },
+        {
+            "type": "code_interpreter"  # 代码解释器
+        },
+        {
+            "type": "function",  # 用于获取当前日期所在城市的函数
+            "function": {
+                "name": "get_city_for_date",
+                "description": "根据传入的日期获取对应的城市.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "date_str": {
+                            "type": "string",
+                            "description": "用于获取对应城市的日期，格式为YYYY-MM-DD."
                         },
-                        "required": ["date_str"]
-                    }
-                }
-            },
-            {
-                "type": "function",  # 用于获取问题和答案的函数
-                "function": {
-                    "name": "get_qa",
-                    "description": "获取黑猫好奇的问题和答案，返回包含问题和答案的字典.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "category": {
-                                "type": "string",
-                                "description": "Category of curiosity."
-                            },
-                        },
-                        "required": []
-                    }
-                }
-            },
-            {
-                "type": "function",  # 用于获取图片
-                "function": {
-                    "name": "get_dalle_image",
-                    "description": "根据传入的prompt生成图片.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "prompt": {
-                                "type": "string",
-                                "description": "Prompt of DALL-E 3."
-                            },
-                        },
-                        "required": ["prompt"]
-                    }
+                    },
+                    "required": ["date_str"]
                 }
             }
-        ],
-        files=["../data/knowledge.txt"],
-    )
+        },
+        {
+            "type": "function",  # 用于获取问题和答案的函数
+            "function": {
+                "name": "get_qa",
+                "description": "获取黑猫好奇的问题和答案，返回包含问题和答案的字典.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "category": {
+                            "type": "string",
+                            "description": "Category of curiosity."
+                        },
+                    },
+                    "required": []
+                }
+            }
+        },
+        {
+            "type": "function",  # 用于获取图片
+            "function": {
+                "name": "get_dalle_image",
+                "description": "根据传入的prompt生成图片.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "prompt": {
+                            "type": "string",
+                            "description": "Prompt of DALL-E 3."
+                        },
+                    },
+                    "required": ["prompt"]
+                }
+            }
+        }
+    ],
+    files=["../data/knowledge.txt"],
+    debug=DEBUG
+)
 
+# 创建函数调用列表
+funcs = [get_city_for_date, get_qa, get_dalle_image]
+
+
+@app.get("/create_thread")
+async def create_thread_endpoint():
     # 创建 Thread
-    thread_id = create_thread()
+    thread_id = create_thread(debug=DEBUG)
+    return {"thread_id": thread_id}
 
-    # 创建函数调用列表
-    funcs = [get_city_for_date, get_qa, get_dalle_image]
+@app.post("/chat")
+async def chat(request: ChatMessage):
+    # 处理请求，返回响应
+    message = main(request.message, request.thread_id, debug=DEBUG)
+    if isinstance(message, dict) and "image" in message.keys():
+        return {
+            "message": "",
+            "image": message["image"]
+        }
+    return {
+        "message": message,
+        "image": ""
+    }
+
+def main(query, thread_id, debug=False):
     # 根据输入获取回答
     message = get_completion(assistant_id, thread_id, query, funcs, debug)
     return message
-    # while True:
-    #     user_input = input("你：")
-    #     message = get_completion(assistant_id, thread_id, user_input, funcs, debug)
-    #     print("小黑：", message)
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, port=8000)

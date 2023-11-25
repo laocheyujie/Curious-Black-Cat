@@ -11,7 +11,7 @@ load_dotenv()
 # 获取 API 密钥
 NINJAS_API_KEY = os.getenv("NINJAS_API_KEY")
 
-random.seed(333)
+random.seed(2023)
 
 def get_city_list():
     """
@@ -101,7 +101,7 @@ def get_qa(category=''):
 
         
 if __name__ == "__main__":
-    city_on_date = get_city_for_date("2023-11-20")
+    city_on_date = get_city_for_date("2023-11-25")
     print(city_on_date)
     qa = get_qa()
     print(qa)
