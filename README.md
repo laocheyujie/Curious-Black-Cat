@@ -1,4 +1,4 @@
-# Curious Cat
+# 好奇的黑猫
 
 <p align="center">
    📺<a href="https://space.bilibili.com/330394387" target="_blank">bilibili</a> • 🌐 <a href="https://github.com/laocheyujie" target="_blank">Github • ▶️ <a href="https://www.youtube.com/channel/UCzuN1k1nnakatRg8kfT4M6A" target="_blank">YouTube</a>
