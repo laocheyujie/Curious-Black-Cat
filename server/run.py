@@ -1,10 +1,38 @@
+import uvicorn
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from instructions import black_cat_instructions
 from functions import get_city_for_date, get_qa
 from dall_e_3 import get_dalle_image
 from assistant import create_assistant, create_thread, get_completion
 
 
-def main(debug=False):
+# 创建 FastAPI 实例
+app = FastAPI()
+
+# 配置 CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 允许的来源列表
+    allow_credentials=True,
+    allow_methods=["*"],  # 允许的方法
+    allow_headers=["*"],  # 允许的头部
+)
+
+# 定义数据模型
+class ChatQuery(BaseModel):
+    query: str
+    
+DEBUG = True
+
+@app.post("/chat")
+async def chat(request: ChatQuery):
+    # 处理 query，返回响应
+    message = main(request.query, debug=DEBUG)
+    return {"message": message}
+
+def main(query, debug=False):
     # 创建 Assistant
     assistant_id = create_assistant(
         name="好奇的黑猫",
@@ -78,12 +106,13 @@ def main(debug=False):
     # 创建函数调用列表
     funcs = [get_city_for_date, get_qa, get_dalle_image]
     # 根据输入获取回答
-    while True:
-        user_input = input("你：")
-        message = get_completion(assistant_id, thread_id, user_input, funcs, debug)
-        print("小黑：", message)
+    message = get_completion(assistant_id, thread_id, query, funcs, debug)
+    return message
+    # while True:
+    #     user_input = input("你：")
+    #     message = get_completion(assistant_id, thread_id, user_input, funcs, debug)
+    #     print("小黑：", message)
 
 
 if __name__ == "__main__":
-    debug = True
-    main(debug)
+    uvicorn.run(app, host="127.0.0.1", port=8000)
