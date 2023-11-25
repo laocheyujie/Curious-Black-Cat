@@ -70,3 +70,9 @@ npm run dev
 # or
 yarn dev
 ```
+
+### Web Usage
+Open a browser and enter the address: `127.0.0.1:3000` 
+
+## Caution
+If using WSL (Windows Subsystem for Linux), please modify `127.0.0.1`  in the code to the host IP address accordingly.
