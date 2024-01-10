@@ -2,14 +2,17 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css"
-import { MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator } from "@chatscope/chat-ui-kit-react";
+import { MessageModel, MainContainer, ChatContainer, MessageList, Message, MessageInput, TypingIndicator } from "@chatscope/chat-ui-kit-react";
 
+interface MessageType extends MessageModel {
+    image?: string
+}
 
 export default function Home() {
     const [initialized, setInitialized] = useState(false);
     const [threadId, setThreadId] = useState(null);
     const [typing, setTyping] = useState(false);
-    const [messages, setMessages] = useState([
+    const [messages, setMessages] = useState<MessageType[]>([
         {
             message: "喵~",
             sender: "小黑",
@@ -34,20 +37,20 @@ export default function Home() {
         })
     };
 
-    const sendQuery = async (message) => {
+    const sendQuery = async (message: string) => {
         const newMessage = {
             message: message,
             sender: "user",
             direction: "outgoing",
             position: "single"
         }
-        const newMessages = [...messages, newMessage];
+        const newMessages = [...messages, newMessage] as MessageType[];
         setMessages(newMessages);
         setTyping(true);
         await processMessage(newMessages);
     };
 
-    async function processMessage(messages) {
+    async function processMessage(messages: MessageType[]) {
         if (!threadId) {
             console.error("Thread ID is not set");
             return;
